@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^21.0.2",
-    "ethers": "^6.13.4"
+    "ethers": "^6.13.4",
+    "octokit": "^4.0.2"
   }
 }

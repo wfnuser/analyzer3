@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PkgMeta } from '~~/types/pkg'
+import { Octokit } from 'octokit'
 
 const { meta, maxLevel } = defineProps<{
   meta: PkgMeta | undefined
@@ -19,6 +20,26 @@ const githubUrl = computed(() => {
     return `https://github.com/${meta.repository}`
   return meta?.repository?.url?.replace('git+https://github.com/', 'https://github.com/').replace('git://github.com', 'https://github.com')
 })
+
+const contributors = ref([])
+
+watch(githubUrl, (url: string) => {
+  if (!url)
+    return
+
+  const octokit = new Octokit({ auth: import.meta.env.VITE_GITHUB_TOKEN })
+  const owner = url.split('/')[3]
+  const repo = url.split('/')[4].replace('.git', '')
+
+  octokit.rest.repos.listContributors({ owner, repo })
+    .then((response: any) => {
+      contributors.value = response.data
+    })
+    .catch((error: any) => {
+      console.error('Failed to fetch contributors:', error)
+      contributors.value = []
+    })
+}, { immediate: true })
 
 const fundings = computed(() => {
   if (!meta)
@@ -58,20 +79,10 @@ const dependenciesCount = computed(() => Object.keys(meta?.dependencies || {}).l
 const level = defineModel<number>('level')
 const { isOpen } = storeToRefs(useSlide())
 
-const openMetaMask = async () => {
-  if (typeof window.ethereum !== 'undefined') {
-    try {
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-      console.log('MetaMask Connected');
-    }
-    catch (error) {
-      console.error('User rejected connection or error:', error)
-    }
-  }
-  else {
-    alert('MetaMask is not installed, please install MetaMask first!')
-  }
+async function donation() {
+  if (!contributors.value || !contributors.value.length)
+    return
+  tipBatch(contributors.value.map((contributor: any) => contributor.login), meta.name)
 }
 </script>
 
@@ -83,8 +94,10 @@ const openMetaMask = async () => {
           {{ meta.name.charAt(0).toUpperCase() + meta.name.slice(1) }}
         </p>
 
-        <UButton color="gray" variant="ghost" aria-label="Close" size="sm" icon="i-heroicons-x-mark-20-solid"
-          class="md:hidden block" @click="isOpen = false" />
+        <UButton
+          color="gray" variant="ghost" aria-label="Close" size="sm" icon="i-heroicons-x-mark-20-solid"
+          class="md:hidden block" @click="isOpen = false"
+        />
       </div>
 
       <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -92,22 +105,28 @@ const openMetaMask = async () => {
       </p>
 
       <div class="flex flex-wrap gap-2">
-        <UButton :to="`https://www.npmjs.com/package/${meta.name}`" target="_blank" size="xs" color="gray"
-          :ui="{ padding: { xs: 'py-1' } }">
+        <UButton
+          :to="`https://www.npmjs.com/package/${meta.name}`" target="_blank" size="xs" color="gray"
+          :ui="{ padding: { xs: 'py-1' } }"
+        >
           <UIcon name="i-mdi:npm-variant-outline" />
           <span>
             v{{ meta.version }}
           </span>
         </UButton>
 
-        <UButton v-if="meta.homepage" :to="meta.homepage" target="_blank" size="xs" color="gray"
-          :ui="{ padding: { xs: 'py-1' } }">
+        <UButton
+          v-if="meta.homepage" :to="meta.homepage" target="_blank" size="xs" color="gray"
+          :ui="{ padding: { xs: 'py-1' } }"
+        >
           <UIcon name="i-heroicons-globe-alt" />
           <span>homepage</span>
         </UButton>
 
-        <UButton v-if="githubUrl" color="gray" :to="githubUrl" target="_blank" size="xs"
-          :ui="{ padding: { xs: 'py-1' } }">
+        <UButton
+          v-if="githubUrl" color="gray" :to="githubUrl" target="_blank" size="xs"
+          :ui="{ padding: { xs: 'py-1' } }"
+        >
           <UIcon name="i-mdi:github" />
           <span>GitHub</span>
         </UButton>
@@ -129,8 +148,10 @@ const openMetaMask = async () => {
       </p>
 
       <div class="flex flex-wrap gap-2">
-        <UButton v-for="keyword in meta.keywords" :key="keyword" :to="`https://www.npmjs.com/search?q=${keyword}`"
-          target="_blank" size="xs" color="gray" class="rounded-full" :ui="{ padding: { xs: 'py-1' } }">
+        <UButton
+          v-for="keyword in meta.keywords" :key="keyword" :to="`https://www.npmjs.com/search?q=${keyword}`"
+          target="_blank" size="xs" color="gray" class="rounded-full" :ui="{ padding: { xs: 'py-1' } }"
+        >
           {{ keyword }}
         </UButton>
       </div>
@@ -144,8 +165,10 @@ const openMetaMask = async () => {
       </p>
 
       <div class="flex flex-wrap items-start gap-2 overflow-y-auto">
-        <UButton v-for="(_, key) in meta.dependencies" :key="key" :to="`/${key}`" size="xs" color="gray"
-          :ui="{ padding: { xs: 'py-1' } }">
+        <UButton
+          v-for="(_, key) in meta.dependencies" :key="key" :to="`/${key}`" size="xs" color="gray"
+          :ui="{ padding: { xs: 'py-1' } }"
+        >
           {{ key }}
         </UButton>
       </div>
@@ -156,15 +179,17 @@ const openMetaMask = async () => {
         </p>
 
         <div class="flex flex-wrap gap-2">
-          <UButton v-for="funding in fundings" :key="funding.url" :to="funding.url" target="_blank" size="xs"
-            color="gray" :ui="{ padding: { xs: 'py-1' } }">
+          <UButton
+            v-for="funding in fundings" :key="funding.url" :to="funding.url" target="_blank" size="xs"
+            color="gray" :ui="{ padding: { xs: 'py-1' } }"
+          >
             {{ funding.type }}
           </UButton>
         </div>
       </template>
 
       <div class="mt-2">
-        <UButton color="green" size="sm" @click="openMetaMask" target="_blank" class="w-full">
+        <UButton color="green" size="sm" target="_blank" class="w-full" @click="donation">
           <UIcon name="i-mdi:charity" class="mr-2" />
           Donate
         </UButton>
@@ -182,8 +207,10 @@ const openMetaMask = async () => {
       <URange v-model="level" class="flex-1" size="sm" :min="0" :max="maxLevel" :disabled="maxLevel === 0" />
 
       <div class="flex justify-between">
-        <UButton icon="i-radix-icons:image" size="sm" color="gray" variant="solid" label="Save" class="mr-3"
-          :trailing="false" @click="emit('save-image')" />
+        <UButton
+          icon="i-radix-icons:image" size="sm" color="gray" variant="solid" label="Save" class="mr-3"
+          :trailing="false" @click="emit('save-image')"
+        />
       </div>
     </div>
   </div>
