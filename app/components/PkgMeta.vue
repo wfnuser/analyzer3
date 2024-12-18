@@ -84,6 +84,70 @@ async function donation() {
     return
   tipBatch(contributors.value.slice(0, 10).map((contributor: any) => contributor.login), meta.name)
 }
+
+const analysisResult = ref<any>(null)
+const isAnalyzing = ref(false)
+const currentLineIndex = ref(0)
+const analysisLines = ref<string[]>([])
+const displayedText = ref<string[]>([])
+const currentText = ref('')
+let currentChar = 0
+
+const displayNextChar = () => {
+  if (!analysisLines.value.length) return
+  
+  const currentLine = analysisLines.value[currentLineIndex.value] || ''
+  
+  if (currentChar < currentLine.length) {
+    currentText.value += currentLine[currentChar]
+    currentChar++
+    setTimeout(displayNextChar, 10)
+  } else {
+    displayedText.value.push(currentText.value)
+    currentText.value = ''
+    currentChar = 0
+    
+    if (currentLineIndex.value < analysisLines.value.length - 1) {
+      currentLineIndex.value++
+      setTimeout(displayNextChar, 20)
+    }
+  }
+}
+
+const analyzePackage = async () => {
+  if (!githubUrl.value) {
+    alert('No GitHub URL available for this package')
+    return
+  }
+
+  isAnalyzing.value = true
+  analysisResult.value = null
+
+  try {
+    const hostname = window.location.hostname
+    const response = await fetch(`http://${hostname}:5099/api/analyze?githubUrl=${encodeURIComponent(githubUrl.value)}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const { success, data } = await response.json()
+    if (success) {
+      analysisResult.value = data
+      analysisLines.value = data.split('\n').filter(line => line.trim())
+      currentLineIndex.value = 0
+      displayedText.value = []
+      currentText.value = ''
+      currentChar = 0
+      displayNextChar()
+    } else {
+      throw new Error('Analysis failed')
+    }
+  } catch (error) {
+    console.error('Analysis failed:', error)
+    alert('Failed to analyze the package')
+  } finally {
+    isAnalyzing.value = false
+  }
+}
 </script>
 
 <template>
@@ -189,10 +253,39 @@ async function donation() {
       </template>
 
       <div class="mt-2">
-        <UButton color="green" size="sm" target="_blank" class="w-full" @click="donation">
+        <UButton color="green" size="sm" @click="donation" target="_blank" class="w-full flex items-center justify-center">
           <UIcon name="i-mdi:charity" class="mr-2" />
           Donate
         </UButton>
+      </div>
+      <div class="mt-2 space-y-4">
+        <UButton 
+          color="blue" 
+          size="sm" 
+          @click="analyzePackage" 
+          class="w-full flex items-center justify-center"
+          :loading="isAnalyzing"
+          :disabled="isAnalyzing"
+        >
+          <UIcon name="i-mdi:magic" class="mr-2" />
+          {{ isAnalyzing ? 'Analyzing...' : 'Analyze' }}
+        </UButton>
+
+        <!-- Analysis Results -->
+        <Transition name="expand">
+          <div v-if="analysisResult" class="space-y-2">
+            <UDivider />
+            <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">
+              Analysis Results
+            </p>
+            <pre class="text-base bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto whitespace-pre-wrap">
+              <template v-for="(line, index) in displayedText" :key="index">
+                <span class="block">{{ line }}</span>
+              </template>
+              <span class="block">{{ currentText }}<span class="animate-pulse">|</span></span>
+            </pre>
+          </div>
+        </Transition>
       </div>
     </div>
 
@@ -215,3 +308,16 @@ async function donation() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  height: 0;
+  opacity: 0;
+}
+</style>

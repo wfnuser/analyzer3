@@ -263,22 +263,29 @@ const { isOpen } = storeToRefs(useSlide())
 
 <template>
   <div class="flex m-4 gap-4">
-    <div class="w-[14rem] hidden md:block">
+    <div class="w-[33vw] hidden md:block">
       <PkgMeta
         v-model:level="level"
         :max-level="parsedData.maxLevel"
         :meta="pkgMetaData"
         @save-image="saveImage"
+        class="w-full"
       />
     </div>
 
-    <USlideover v-model="isOpen" class="md:hidden block" side="left">
-      <div class="m-4">
+    <USlideover 
+      v-model="isOpen" 
+      class="md:hidden block" 
+      side="left"
+      :width="'33vw'"
+    >
+      <div class="m-4 w-full">
         <PkgMeta
           v-model:level="level"
           :max-level="parsedData.maxLevel"
           :meta="pkgMetaData"
           @save-image="saveImage"
+          class="w-full"
         />
       </div>
     </USlideover>
@@ -290,7 +297,8 @@ const { isOpen } = storeToRefs(useSlide())
           background: 'bg-gray-50 dark:bg-gray-900',
           padding: 'p-2 sm:p-2',
         },
-      }" class="flex-1 h-[calc(100vh-6rem)] relative"
+      }" 
+      class="w-[66vw] h-[calc(100vh-6rem)] relative ml-auto"
     >
       <div ref="networkRef" class="h-[calc(100vh-7rem)] w-full" :class="loading ? 'opacity-0' : ''" />
 
