@@ -9,5 +9,6 @@
 <template>
   <nuxt-layout>
     <nuxt-page />
+    <UNotifications />
   </nuxt-layout>
 </template>
