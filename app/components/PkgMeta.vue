@@ -82,7 +82,7 @@ const { isOpen } = storeToRefs(useSlide())
 async function donation() {
   if (!contributors.value || !contributors.value.length)
     return
-  tipBatch(contributors.value.map((contributor: any) => contributor.login), meta.name)
+  tipBatch(contributors.value.slice(0, 10).map((contributor: any) => contributor.login), meta.name)
 }
 </script>
 
