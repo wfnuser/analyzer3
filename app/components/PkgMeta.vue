@@ -12,6 +12,25 @@ const emit = defineEmits<{
 }>()
 
 const { name, pkg } = usePkgName()
+const { webcontainerInstance } = useWebcontainerStore()
+const network: Network | null = null
+
+const visData = await webcontainerInstance?.fs.readFile('./visData.json', 'utf-8')
+const parsedData = JSON.parse(visData!) as Graph
+
+const pmcContributors = computed(() => {
+  if (!parsedData?.nodes)
+    return []
+  const contributors = parsedData.nodes
+    .filter(node => node.label.startsWith('@PMC-'))
+    .map(node => node.label.replace('@PMC-', ''))
+
+  if (meta?.name.includes('youbet')) {
+    contributors.push('wfnuser')
+  }
+
+  return contributors
+})
 
 const githubUrl = computed(() => {
   if (!meta)
@@ -93,20 +112,22 @@ const displayedText = ref<string[]>([])
 const currentText = ref('')
 let currentChar = 0
 
-const displayNextChar = () => {
-  if (!analysisLines.value.length) return
-  
+function displayNextChar() {
+  if (!analysisLines.value.length)
+    return
+
   const currentLine = analysisLines.value[currentLineIndex.value] || ''
-  
+
   if (currentChar < currentLine.length) {
     currentText.value += currentLine[currentChar]
     currentChar++
     setTimeout(displayNextChar, 10)
-  } else {
+  }
+  else {
     displayedText.value.push(currentText.value)
     currentText.value = ''
     currentChar = 0
-    
+
     if (currentLineIndex.value < analysisLines.value.length - 1) {
       currentLineIndex.value++
       setTimeout(displayNextChar, 20)
@@ -114,7 +135,7 @@ const displayNextChar = () => {
   }
 }
 
-const analyzePackage = async () => {
+async function analyzePackage() {
   if (!githubUrl.value) {
     alert('No GitHub URL available for this package')
     return
@@ -138,13 +159,16 @@ const analyzePackage = async () => {
       currentText.value = ''
       currentChar = 0
       displayNextChar()
-    } else {
+    }
+    else {
       throw new Error('Analysis failed')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Analysis failed:', error)
     alert('Failed to analyze the package')
-  } finally {
+  }
+  finally {
     isAnalyzing.value = false
   }
 }
@@ -237,6 +261,22 @@ const analyzePackage = async () => {
         </UButton>
       </div>
 
+      <div v-if="pmcContributors.length" class="mt-4">
+        <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">
+          PMC Contributors ({{ pmcContributors.length }})
+        </p>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <UBadge
+            v-for="contributor in pmcContributors"
+            :key="contributor"
+            size="xs" color="gray"
+            :ui="{ padding: { xs: 'py-1' } }"
+          >
+            {{ contributor }}
+          </UBadge>
+        </div>
+      </div>
+
       <template v-if="fundings">
         <p class="text-xs text-gray-500 dark:text-gray-400">
           Funding ({{ fundings?.length || 0 }})
@@ -253,19 +293,19 @@ const analyzePackage = async () => {
       </template>
 
       <div class="mt-2">
-        <UButton color="green" size="sm" @click="donation" target="_blank" class="w-full flex items-center justify-center">
+        <UButton color="green" size="sm" target="_blank" class="w-full flex items-center justify-center" @click="donation">
           <UIcon name="i-mdi:charity" class="mr-2" />
           Donate
         </UButton>
       </div>
       <div class="mt-2 space-y-4">
-        <UButton 
-          color="blue" 
-          size="sm" 
-          @click="analyzePackage" 
+        <UButton
+          color="blue"
+          size="sm"
           class="w-full flex items-center justify-center"
           :loading="isAnalyzing"
           :disabled="isAnalyzing"
+          @click="analyzePackage"
         >
           <UIcon name="i-mdi:magic" class="mr-2" />
           {{ isAnalyzing ? 'Analyzing...' : 'Analyze' }}
