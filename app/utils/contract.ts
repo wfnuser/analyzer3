@@ -67,7 +67,11 @@ export async function getDonations(githubHandle: string): Promise<Donation[]> {
 export async function claimDonation(githubHandle: string, index: number) {
   const { signer } = await getWalletProvider()
   const distributor = new ethers.Contract(distributorAddress, abi, signer)
-  return distributor.claimDonation(githubHandle, index)
+  return distributor.claimDonation(githubHandle, index, {
+    gasLimit: 2000000,
+    maxFeePerGas: ethers.parseUnits('200', 'gwei'),
+    maxPriorityFeePerGas: ethers.parseUnits('20', 'gwei'),
+  })
 }
 
 export async function tipBatch(githubUsernames: string[], project: string) {

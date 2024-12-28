@@ -27,6 +27,22 @@ async function fetchDonations() {
     loading.value = false
   }
 }
+
+async function claim(githubHandle: string, index: number) {
+  loading.value = true
+  try {
+    await claimDonation(githubHandle, index)
+    toast.add({ title: 'Successfully claimed!', color: 'green' })
+    await fetchDonations()
+  }
+  catch (error) {
+    console.error(error)
+    toast.add({ title: 'Failed to claim donation', color: 'red' })
+  }
+  finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -84,7 +100,7 @@ async function fetchDonations() {
               v-if="!row.claimed"
               size="xs"
               color="green"
-              @click="claimDonation(githubHandle, row.index)"
+              @click="claim(githubHandle, row.index)"
             >
               Claim
             </UButton>
