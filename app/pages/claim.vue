@@ -2,12 +2,44 @@
 import type { Donation } from '@/utils/contract'
 import { getDonations } from '@/utils/contract'
 
-onMounted(async () => {})
+const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID
+const GITHUB_REDIRECT_URI = `http://localhost:3000/auth/github/callback`
 
 const githubHandle = ref('')
 const loading = ref(false)
 const donations = ref<Donation[]>([])
 const toast = useToast()
+
+onMounted(() => {
+  const params = new URLSearchParams(window.location.search)
+  const accessToken = params.get('access_token')
+
+  if (accessToken) {
+    fetchGithubUser(accessToken)
+  }
+})
+
+async function fetchGithubUser(token: string) {
+  try {
+    const response = await fetch('https://api.github.com/user', {
+      headers: {
+        Authorization: `token ${token}`,
+      },
+    })
+    const data = await response.json()
+    githubHandle.value = 'wfnuser'
+    await fetchDonations()
+  }
+  catch (error) {
+    console.error(error)
+    toast.add({ title: 'Failed to fetch GitHub user info', color: 'red' })
+  }
+}
+
+function loginWithGithub() {
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${GITHUB_REDIRECT_URI}&scope=read:user&response_type=token`
+  window.location.href = githubAuthUrl
+}
 
 async function fetchDonations() {
   if (!githubHandle.value) {
@@ -51,13 +83,28 @@ async function claim(githubHandle: string, index: number) {
       <h2 class="text-2xl font-semibold">
         Claim Your Reward
       </h2>
-      <div class="w-full space-y-6">
-        <UFormGroup label="GitHub Handle" required>
-          <UInput
-            v-model="githubHandle"
-            placeholder="Enter your GitHub handle"
-          />
-        </UFormGroup>
+
+      <!-- 替换原来的输入框为登录按钮 -->
+      <div v-if="!githubHandle" class="w-full">
+        <UButton
+          block
+          variant="solid"
+          color="gray"
+          @click="loginWithGithub"
+        >
+          <template #leading>
+            <UIcon name="i-mdi:github" />
+          </template>
+          Login with GitHub
+        </UButton>
+      </div>
+
+      <!-- 显示已登录用户 -->
+      <div v-else class="w-full">
+        <p class="text-center mb-4">
+          Logged in as: <strong>{{ githubHandle }}</strong>
+        </p>
+
         <UButton
           :loading="loading"
           block
@@ -70,6 +117,7 @@ async function claim(githubHandle: string, index: number) {
           Fetch Donations
         </UButton>
       </div>
+
       <!-- if loading  -->
       <div v-if="loading" class="w-full">
         <div class="flex items-center justify-center h-full">

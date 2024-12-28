@@ -4,7 +4,7 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
   devServer: {
-    port: 5111,
+    port: 3000,
     host: '0.0.0.0',
   },
   modules: [
