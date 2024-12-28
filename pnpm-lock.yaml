@@ -14,6 +14,9 @@ importers:
       ethers:
         specifier: ^6.13.4
         version: 6.13.4
+      marked:
+        specifier: ^15.0.4
+        version: 15.0.4
       octokit:
         specifier: ^4.0.2
         version: 4.0.2
@@ -3640,6 +3643,11 @@ packages:
 
   markdown-table@3.0.3:
     resolution: {integrity: sha512-Z1NL3Tb1M9wH4XESsCDEksWoKTdlUafKc4pt0GRwjUyXaCFZ+dc3g2erqB6zm3szA2IUSi7VnPI+o/9jnxh9hw==}
+
+  marked@15.0.4:
+    resolution: {integrity: sha512-TCHvDqmb3ZJ4PWG7VEGVgtefA5/euFmsIhxtD0XsBxI39gUSKL81mIRFdt0AiNQozUahd4ke98ZdirExd/vSEw==}
+    engines: {node: '>= 18'}
+    hasBin: true
 
   mdast-util-find-and-replace@3.0.1:
     resolution: {integrity: sha512-SG21kZHGC3XRTSUhtofZkBzZTJNM5ecCi0SK2IMKmSXR8vO3peL+kb1O0z7Zl83jKtutG4k5Wv/W7V3/YHvzPA==}
@@ -9537,6 +9545,8 @@ snapshots:
       semver: 6.3.1
 
   markdown-table@3.0.3: {}
+
+  marked@15.0.4: {}
 
   mdast-util-find-and-replace@3.0.1:
     dependencies:

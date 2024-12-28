@@ -29,7 +29,7 @@ const openai = new OpenAI({
 
 async function analyze(githubUrl: string): Promise<string> {
   console.log(githubUrl);
-  const prompt = `Please provide a concise analysis of this GitHub repository: ${githubUrl}, with a word count between 150 and 200 words. The output should be in plain text format, without using Markdown format. The content should be divided into at least two paragraphs.`;
+  const prompt = `Please provide a concise analysis of this GitHub repository: ${githubUrl}.`;
   const completion = await openai.chat.completions.create({
     messages: [{ role: "user", content: prompt }],
     model: "deepseek-chat",

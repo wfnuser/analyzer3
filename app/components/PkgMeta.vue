@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PkgMeta } from '~~/types/pkg'
 import { Octokit } from 'octokit'
+import { marked } from 'marked'
 
 const { meta, maxLevel } = defineProps<{
   meta: PkgMeta | undefined
@@ -318,12 +319,12 @@ async function analyzePackage() {
             <p class="text-sm font-semibold text-gray-500 dark:text-gray-400">
               Analysis Results
             </p>
-            <pre class="text-base bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto whitespace-pre-wrap">
+            <div class="markdown-body bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto">
               <template v-for="(line, index) in displayedText" :key="index">
-                <span class="block">{{ line }}</span>
+                <div v-html="marked(line)" />
               </template>
-              <span class="block">{{ currentText }}<span class="animate-pulse">|</span></span>
-            </pre>
+              <div v-html="marked(currentText)" /><span class="animate-pulse">|</span>
+            </div>
           </div>
         </Transition>
       </div>
@@ -359,5 +360,11 @@ async function analyzePackage() {
 .expand-leave-to {
   height: 0;
   opacity: 0;
+}
+</style>
+
+<style>
+.markdown-body {
+  @apply prose dark:prose-invert max-w-none;
 }
 </style>
