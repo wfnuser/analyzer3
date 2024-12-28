@@ -6,8 +6,8 @@ const abi = [
   'function tipBatch(string[] calldata githubUsernames, string calldata project, uint256[] calldata amounts) external payable',
 ]
 
-const distributorAddress = '0xc0C90Da8e7a8c0b6a0Ab3f96d32954CC885bA681'
-const provider = new ethers.JsonRpcProvider('https://rpc.sepolia.mantle.xyz')
+const distributorAddress = '0xA67C2F914D53C7e97d6d42BB5E851e5b0324956C'
+const provider = new ethers.JsonRpcProvider('https://neoxt4seed1.ngd.network')
 
 export interface Donation {
   project: string
@@ -21,10 +21,11 @@ async function getWalletProvider() {
     try {
       // 请求连接钱包
       await window.ethereum.request({ method: 'eth_requestAccounts' })
-      if (window.ethereum.chainId !== '0x138b') {
+      // chainId is 12227332 -> to hex
+      if (window.ethereum.chainId !== '0xBA9304') {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x138b' }],
+          params: [{ chainId: '0xBA9304' }],
         })
       }
 
@@ -85,5 +86,8 @@ export async function tipBatch(githubUsernames: string[], project: string) {
 
   return distributor.tipBatch(githubUsernames, project, amounts, {
     value: totalAmount,
+    gasLimit: 2000000,
+    maxFeePerGas: ethers.parseUnits('200', 'gwei'),
+    maxPriorityFeePerGas: ethers.parseUnits('20', 'gwei'),
   })
 }
