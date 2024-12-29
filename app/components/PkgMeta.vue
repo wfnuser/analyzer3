@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PkgMeta } from '~~/types/pkg'
-import { Octokit } from 'octokit'
 import { marked } from 'marked'
+import { Octokit } from 'octokit'
 
 const { meta, maxLevel } = defineProps<{
   meta: PkgMeta | undefined
@@ -146,10 +146,9 @@ async function analyzePackage() {
   analysisResult.value = null
 
   try {
-    // const hostname = window.location.hostname
-    const hostname = '43.132.156.239'
+    const hostname = window.location.hostname
 
-    const response = await fetch(`http://${hostname}:5099/api/analyze?githubUrl=${encodeURIComponent(githubUrl.value)}`)
+    const response = await fetch(`/api/analyze?githubUrl=${encodeURIComponent(githubUrl.value)}`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
