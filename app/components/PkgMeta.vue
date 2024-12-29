@@ -146,7 +146,9 @@ async function analyzePackage() {
   analysisResult.value = null
 
   try {
-    const hostname = window.location.hostname
+    // const hostname = window.location.hostname
+    const hostname = '43.132.156.239'
+
     const response = await fetch(`http://${hostname}:5099/api/analyze?githubUrl=${encodeURIComponent(githubUrl.value)}`)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
